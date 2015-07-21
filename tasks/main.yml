@@ -1,0 +1,73 @@
+---
+- name: Fail if OS distro is not Ubuntu 14.04
+  fail: 
+      msg="The role is designed only for Ubuntu 14.04"
+  when: "{{ ansible_distribution_version | version_compare('14.04', '!=') }}" 
+
+- name: Install dependencies
+  apt: 
+      name={{ item }} 
+      update_cache=yes
+  with_items: 
+      - python-dev
+      - python-setuptools
+
+- name: Install pip
+  easy_install: 
+      name=pip 
+
+- name: Install docker-py
+  pip: 
+      name=docker-py 
+      state=present
+      version=1.1.0
+
+#- name: Download the installation script
+#  get_url: 
+#      url=https://get.docker.com/ 
+#      dest=/tmp/docker_install.sh 
+#      owner=root 
+#      group=root 
+#      mode=0700
+#
+- name: Add docker apt repo
+  apt_repository:
+      repo='deb https://get.docker.com/ubuntu docker main'
+      state=present
+
+#- name: Import the Docker repository key
+#  apt_key:
+#      keyserver=hkp://p80.pool.sks-keyservers.net:80 
+#      id=36A1D7869245C8950F966E92D8576A8BA88D21E9
+
+- name: Import the Docker repository key
+  apt_key:
+      url=https://get.docker.io/gpg 
+      state=present
+
+- name: Install Docker package
+  apt: 
+      name=lxc-docker 
+      update_cache=yes
+
+- name: Create a docker group
+  group: 
+      name=docker 
+      state=present
+
+- name: Add user(s) to docker group
+  user: 
+      name={{ item }} 
+      group=docker 
+      state=present
+  with_items: docker_users
+  when: docker_users is defined
+
+- name: Configure Docker 
+  template: 
+      src=default_docker.j2 
+      dest=/etc/default/docker 
+      mode=0644 
+      owner=root 
+      group=root
+  notify: restart docker
