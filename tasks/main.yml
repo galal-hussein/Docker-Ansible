@@ -22,32 +22,20 @@
       state=present
       version=1.1.0
 
-#- name: Download the installation script
-#  get_url: 
-#      url=https://get.docker.com/ 
-#      dest=/tmp/docker_install.sh 
-#      owner=root 
-#      group=root 
-#      mode=0700
-#
 - name: Add docker apt repo
   apt_repository:
-      repo='deb https://get.docker.com/ubuntu docker main'
+      repo='deb https://apt.dockerproject.org/repo ubuntu-{{ ansible_distribution_release }} main'
       state=present
-
-#- name: Import the Docker repository key
-#  apt_key:
-#      keyserver=hkp://p80.pool.sks-keyservers.net:80 
-#      id=36A1D7869245C8950F966E92D8576A8BA88D21E9
 
 - name: Import the Docker repository key
   apt_key:
-      url=https://get.docker.io/gpg 
+      url=https://apt.dockerproject.org/gpg
       state=present
+      id=2C52609D
 
 - name: Install Docker package
   apt: 
-      name=lxc-docker 
+      name=docker-engine
       update_cache=yes
 
 - name: Create a docker group
